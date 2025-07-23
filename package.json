@@ -1,7 +1,6 @@
 {
   "name": "generata",
   "version": "1.0.1",
-  "description": "A CLI tool that auto-generates a professional README.md based on your project structure and package.json data.",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -25,7 +24,8 @@
   "author": "Mahmoud",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^5.4.1"
+    "chalk": "^5.4.1",
+    "inquirer": "^12.8.2"
   },
   "engines": {
     "node": ">=18.0.0"

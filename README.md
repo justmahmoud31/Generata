@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Updated](https://img.shields.io/badge/last_updated-2025-07-23-orange)
 
-> A CLI tool that auto-generates a professional README.md based on your project structure and package.json data.
+
 
 📦 Repo: https://github.com/yourusername/generata.git
 
@@ -17,6 +17,7 @@
 
 ## 📦 Dependencies
 - chalk
+- inquirer
 
 ## 🧪 Dev Dependencies
 - eslint

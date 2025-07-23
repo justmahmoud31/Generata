@@ -5,6 +5,7 @@ import path from "path";
 import chalk from "chalk";
 import os from "os";
 import { execSync } from "child_process";
+import inquirer from "inquirer"; // ← added this line
 
 // === CLI flags ===
 const forceOverwrite = process.argv.includes("--force");
@@ -39,69 +40,106 @@ if (fs.existsSync(packageJsonPath)) {
     : pkg.repository?.url || "";
 }
 
-// === Get Node Version ===
-try {
-  nodeVersion = process.version;
-} catch (err) {
-  nodeVersion = "Unknown";
-}
+// === Prompt for missing info ===
+const promptForMissingInfo = async () => {
+  const questions = [];
 
-// === Last updated ===
-lastUpdated = new Date().toISOString().split("T")[0];
+  if (!description) {
+    questions.push({
+      type: "input",
+      name: "description",
+      message: "No description found in package.json. Please provide one:",
+    });
+  }
 
-// === Folder Structure ===
-function getFolderTree(dir, depth = 0) {
-  const indent = "  ".repeat(depth);
-  const items = fs.readdirSync(dir);
-  return items
-    .filter((item) => !item.startsWith(".") && item !== "node_modules")
-    .map((item) => {
-      const fullPath = path.join(dir, item);
-      if (fs.statSync(fullPath).isDirectory()) {
-        return `${indent}- ${item}/\n${getFolderTree(fullPath, depth + 1)}`;
-      } else {
-        return `${indent}- ${item}`;
-      }
-    })
-    .join("\n");
-}
+  if (!author || author === "Unknown") {
+    questions.push({
+      type: "input",
+      name: "author",
+      message: "No author found. Who is the author of this project?",
+    });
+  }
 
-const folderStructure = getFolderTree(projectRoot);
+  if (!license || license === "UNLICENSED") {
+    questions.push({
+      type: "input",
+      name: "license",
+      message: "No license found. Enter the license type (e.g., MIT):",
+    });
+  }
 
-// === Detect common config files ===
-const configFiles = [".env", ".gitignore", ".eslintrc", ".prettierrc", "tsconfig.json"]
-  .filter(file => fs.existsSync(path.join(projectRoot, file)));
-
-// === Detect frameworks ===
-function detectFrameworks() {
-  const allDeps = [...dependencies, ...devDependencies].map(d => d.toLowerCase());
-  const known = [
-    { name: "React", keyword: "react" },
-    { name: "Next.js", keyword: "next" },
-    { name: "Express", keyword: "express" },
-    { name: "Tailwind CSS", keyword: "tailwind" },
-    { name: "TypeScript", keyword: "typescript" },
-    { name: "Redux", keyword: "redux" },
-    { name: "Mongoose", keyword: "mongoose" },
-  ];
-  return known.filter(({ keyword }) => allDeps.includes(keyword)).map(f => `- ${f.name}`);
-}
-const frameworks = detectFrameworks();
-
-// === Scripts with explanations ===
-const scriptDescriptions = {
-  dev: "Start the app in development mode",
-  build: "Build the app for production",
-  start: "Start the production server",
-  lint: "Lint the codebase",
-  test: "Run tests",
+  const answers = await inquirer.prompt(questions);
+  description = answers.description || description;
+  author = answers.author || author;
+  license = answers.license || license;
 };
-const scriptLines = Object.entries(scripts).map(
-  ([key, val]) => `- \`${key}\`: ${val} ${scriptDescriptions[key] ? `→ ${scriptDescriptions[key]}` : ""}`
-);
 
-// === Template ===
-const readme = `# ${projectName}
+(async () => {
+  await promptForMissingInfo();
+
+  // === Get Node Version ===
+  try {
+    nodeVersion = process.version;
+  } catch (err) {
+    nodeVersion = "Unknown";
+  }
+
+  // === Last updated ===
+  lastUpdated = new Date().toISOString().split("T")[0];
+
+  // === Folder Structure ===
+  function getFolderTree(dir, depth = 0) {
+    const indent = "  ".repeat(depth);
+    const items = fs.readdirSync(dir);
+    return items
+      .filter((item) => !item.startsWith(".") && item !== "node_modules")
+      .map((item) => {
+        const fullPath = path.join(dir, item);
+        if (fs.statSync(fullPath).isDirectory()) {
+          return `${indent}- ${item}/\n${getFolderTree(fullPath, depth + 1)}`;
+        } else {
+          return `${indent}- ${item}`;
+        }
+      })
+      .join("\n");
+  }
+
+  const folderStructure = getFolderTree(projectRoot);
+
+  // === Detect common config files ===
+  const configFiles = [".env", ".gitignore", ".eslintrc", ".prettierrc", "tsconfig.json"]
+    .filter(file => fs.existsSync(path.join(projectRoot, file)));
+
+  // === Detect frameworks ===
+  function detectFrameworks() {
+    const allDeps = [...dependencies, ...devDependencies].map(d => d.toLowerCase());
+    const known = [
+      { name: "React", keyword: "react" },
+      { name: "Next.js", keyword: "next" },
+      { name: "Express", keyword: "express" },
+      { name: "Tailwind CSS", keyword: "tailwind" },
+      { name: "TypeScript", keyword: "typescript" },
+      { name: "Redux", keyword: "redux" },
+      { name: "Mongoose", keyword: "mongoose" },
+    ];
+    return known.filter(({ keyword }) => allDeps.includes(keyword)).map(f => `- ${f.name}`);
+  }
+  const frameworks = detectFrameworks();
+
+  // === Scripts with explanations ===
+  const scriptDescriptions = {
+    dev: "Start the app in development mode",
+    build: "Build the app for production",
+    start: "Start the production server",
+    lint: "Lint the codebase",
+    test: "Run tests",
+  };
+  const scriptLines = Object.entries(scripts).map(
+    ([key, val]) => `- \`${key}\`: ${val} ${scriptDescriptions[key] ? `→ ${scriptDescriptions[key]}` : ""}`
+  );
+
+  // === Template ===
+  const readme = `# ${projectName}
 
 ![Node Version](https://img.shields.io/badge/node-${nodeVersion}-green)
 ![License](https://img.shields.io/badge/license-${license}-blue)
@@ -138,5 +176,6 @@ ${scriptLines.length ? scriptLines.join("\n") : "- No scripts"}
 - ${license}
 `;
 
-fs.writeFileSync(readmePath, readme, "utf-8");
-console.log(chalk.green("✅ README.md generated successfully!"));
+  fs.writeFileSync(readmePath, readme, "utf-8");
+  console.log(chalk.green("✅ README.md generated successfully!"));
+})();
