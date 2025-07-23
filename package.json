@@ -1,19 +1,42 @@
 {
   "name": "generata",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "description": "A CLI tool that auto-generates a professional README.md based on your project structure and package.json data.",
   "main": "index.js",
   "type": "module",
   "bin": {
     "generate-readme": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "cli",
+    "readme-generator",
+    "readme",
+    "documentation",
+    "project-info",
+    "nodejs",
+    "automation"
+  ],
+  "author": "Mahmoud",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/generata.git"
+  },
+  "devDependencies": {
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2"
   }
 }
